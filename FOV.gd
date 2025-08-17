@@ -1,4 +1,5 @@
 extends Node2D
+class_name FOVUtils
 	
 func _ready():
 	run_tests()
@@ -20,19 +21,19 @@ Notes:
 * FOV polygon must be closed
 	* This can be ensured by adding a bounding box around the scene. 
 """
-func get_fov_from_polygons(polygons, origin):
+static func get_fov_from_polygons(polygons, origin):
 	var segments = polygon_collection_to_segments(polygons, origin)
 	var fov = get_fov_from_segments(segments, origin)
 	return fov
 
-func polygon_collection_to_segments(polygons, origin):
+static func polygon_collection_to_segments(polygons, origin):
 	var fov_segments = []
 	for p in polygons:
 		for segment in polygon_to_segments(p, origin):
 			fov_segments.append(segment)
 	return fov_segments
 
-func polygon_to_segments(poly, origin):
+static func polygon_to_segments(poly, origin):
 	#need to pass in origin to filter segments colinear with origin. 
 	var segments = []
 	for i in range(len(poly)):
@@ -41,20 +42,20 @@ func polygon_to_segments(poly, origin):
 			segments.append(new_seg)
 	return segments
 
-func valid_segment(segment, origin):
+static func valid_segment(segment, origin):
 	var oab = Comparisons.new(origin).compute_orientation(segment.a, segment.b, origin)
 	if oab == ORIENTATION.colinear:
 		pass
 	return oab != ORIENTATION.colinear
 
-func get_fov_from_segments(segments, origin):
+static func get_fov_from_segments(segments, origin):
 	var data = store_segments_as_events(segments, origin, [], OrderedSet.new(origin))
 	data['events'] = sort_events_by_angle(origin, data['events'])
 	var vertices = find_visibility_polygon(data['events'], data['state'], origin)
 	var polygon = remove_colinear_points(vertices)
 	return polygon
 
-func store_segments_as_events(segment_collection, origin, events=[], state=OrderedSet.new(Vector2(0,0))):
+static func store_segments_as_events(segment_collection, origin, events=[], state=OrderedSet.new(Vector2(0,0))):
 	for segment in segment_collection:
 		#sort segments and add them as events
 		# skip line segments colinear with point
@@ -94,11 +95,11 @@ func store_segments_as_events(segment_collection, origin, events=[], state=Order
 	}	
 	return data 
 
-func sort_events_by_angle(origin, events):
+static func sort_events_by_angle(origin, events):
 	events.sort_custom(Comparisons.new(origin).compare_event)
 	return events	
 
-func find_visibility_polygon(events, state, origin):
+static func find_visibility_polygon(events, state, origin):
 	# ray shoots down 
 	# recall: positive Y points DOWN
 	var vertices = []
@@ -132,7 +133,7 @@ func find_visibility_polygon(events, state, origin):
 			state.insert(event.segment)
 	return vertices
 
-func remove_colinear_points(vertices):
+static func remove_colinear_points(vertices):
 	var top = 0
 	for idx in range(len(vertices)):
 		var prev = top - 1
@@ -155,15 +156,15 @@ func remove_colinear_points(vertices):
 
 
 # *********************************************************************************************************
-# Support Functions
+# Support static Functions
 # *********************************************************************************************************
 
-func normal(vec2):
+static func normal(vec2):
 	#this is to parallel code from https://github.com/trylock/visibility/blob/master/tests/vector2_test.cpp
 	#refactor once working.
 	return Vector2(-vec2.y, vec2.x)
 
-func reverse_segment(line_segment):
+static func reverse_segment(line_segment):
 	return LineSegment.new(line_segment.b, line_segment.a)
 
 static func ray_intersects(ray, segment):
@@ -420,14 +421,14 @@ class OrderedSet:
 # Tests
 # *********************************************************************************************************
 
-func run_tests():
+static func run_tests():
 	vector_tests()
 	primitive_tests()
 	visibility_tests()
 	print('FOV tests complete!')
 
 
-func vector_tests():
+static func vector_tests():
 	test_create_vector()
 	test_add_vectors()
 	test_subtract_vectors()
@@ -443,13 +444,13 @@ func vector_tests():
 	test_normalize_float_vec()
 	test_is_counter_clockwise()
 
-func primitive_tests():
+static func primitive_tests():
 	test_ordered_set()
 	test_calculate_orientation_of_3_points_in_plane()
 	test_calculate_intersection()
 	test_line_segment_is_closer_works()
 
-func visibility_tests():
+static func visibility_tests():
 	test_compare_line_segments_with_no_common_endpoints()
 	test_compare_line_segments_with_common_endpoints()
 	test_compare_angle_with_two_points_in_general_position()
@@ -463,7 +464,7 @@ func visibility_tests():
 	test_calculate_visibility_polygon_with_a_convex_polygon_obstacle()
 	test_calculate_visibility_polygon_with_a_concave_polygon_obstacle()
 
-func test_ordered_set():
+static func test_ordered_set():
 	var a = LineSegment.new(Vector2(1,1), Vector2(1,0))
 	var b = LineSegment.new(Vector2(1,2), Vector2(2,0))
 	var c = LineSegment.new(Vector2(1,3), Vector2(3,0))
@@ -496,7 +497,7 @@ func test_ordered_set():
 
 
 
-func test_create_vector():
+static func test_create_vector():
 	var result = Vector2(1, 1)
 	assert( result.x == 1)
 	assert( result.y == 1)
@@ -505,7 +506,7 @@ func test_create_vector():
 	assert( other.x == 3)
 	assert( other.y == 4)
 
-func test_add_vectors():
+static func test_add_vectors():
 	var a = Vector2(1,2)
 	var b = Vector2(3,4)
 
@@ -516,7 +517,7 @@ func test_add_vectors():
 	assert( a.x == 4)
 	assert( a.y == 6)
 
-func test_subtract_vectors():
+static func test_subtract_vectors():
 	var a = Vector2(1,2)
 	var b = Vector2(3,4)
 
@@ -525,7 +526,7 @@ func test_subtract_vectors():
 	assert( a.x == -2)
 	assert( a.y == -2)
 
-func test_multiply_vectors():
+static func test_multiply_vectors():
 	var a = Vector2(1,2)
 	assert( (a * 3).x == 3)
 	assert( (a * 3).y == 6)
@@ -534,7 +535,7 @@ func test_multiply_vectors():
 	assert( a.x == 3)
 	assert( a.y == 6)
 
-func test_divide_vectors():
+static func test_divide_vectors():
 	var a = Vector2(2, 8)
 	assert( (a / 2).x == 1)
 	assert( (a / 2).y == 4)
@@ -543,12 +544,12 @@ func test_divide_vectors():
 	assert( a.x == 1)
 	assert( a.y == 4)
 
-func test_negate_vector():
+static func test_negate_vector():
 	var a = Vector2(2, 8)
 	assert( (-a).x == -2)
 	assert( (-a).y == -8)
 
-func test_compare_two_vectors():
+static func test_compare_two_vectors():
 	var a = Vector2(1, 2)
 	var b = Vector2(1, 2)
 	assert( a == b)
@@ -559,20 +560,20 @@ func test_compare_two_vectors():
 	assert( not (a == b))
 	assert( a != b)
 
-func test_dot_product():
+static func test_dot_product():
 	assert( Vector2(1,2).dot(Vector2(3,4)) == 11)
 	assert( Vector2(1,2).dot(Vector2(0,0)) == 0)
 
-func test_squared_length():
+static func test_squared_length():
 	assert( Vector2(3,4).length_squared() == 25)
 	assert( Vector2(0,0).length_squared() == 0)
 
-func test_square_of_euclidean_distance():
+static func test_square_of_euclidean_distance():
 	assert( Vector2(3,4).distance_squared_to(Vector2(0,1)) == 18)
 	assert( Vector2(3,4).distance_squared_to(Vector2(3,4)) == 0 )
 
 
-func test_2d_normal_vector():
+static func test_2d_normal_vector():
 	var a = Vector2(3,4)
 	var ortho = normal(a)
 	assert( ortho.x == -4)
@@ -580,13 +581,13 @@ func test_2d_normal_vector():
 
 
 
-func test_determinant():
+static func test_determinant():
 	var a = Vector2(3,4)
 	var b = Vector2(1,2)
 	var det = Comparisons.cross(a, b)
 	assert( det == 2)
 
-func test_normalize_float_vec():
+static func test_normalize_float_vec():
 	var a = Vector2(3,4)
 	var normalized = a.normalized()
 	assert( normalized.length_squared() == 1)
@@ -598,14 +599,14 @@ func test_normalize_float_vec():
 
 
 
-func test_calculate_orientation_of_3_points_in_plane():
+static func test_calculate_orientation_of_3_points_in_plane():
 	assert( Comparisons.compute_orientation(Vector2(0,0), Vector2(1,0), Vector2(2,1)) == ORIENTATION.right_turn)
 	assert( Comparisons.compute_orientation(Vector2(0,0), Vector2(1,0), Vector2(2,-1)) == ORIENTATION.left_turn)
 	assert( Comparisons.compute_orientation(Vector2(0,0), Vector2(1,0), Vector2(2,0)) == ORIENTATION.colinear)
 	assert( Comparisons.compute_orientation(Vector2(0,0), Vector2(0,0), Vector2(4,5)) == ORIENTATION.colinear)
 	assert( Comparisons.compute_orientation(Vector2(0,0), Vector2(0,0), Vector2(0,0)) == ORIENTATION.colinear)
 
-func test_calculate_intersection():
+static func test_calculate_intersection():
 	var point = Vector2()
 	var test_ray = Ray.new(Vector2(0,0), Vector2(1,0))
 	var intersection = ray_intersects(test_ray,LineSegment.new(Vector2(-1,1), Vector2(-1,-1)))
@@ -682,7 +683,7 @@ func test_calculate_intersection():
 
 
 
-func test_line_segment_is_closer_works():
+static func test_line_segment_is_closer_works():
 	var origin = Vector2(0,0)
 	var a = Vector2(0,0.1)
 	var b = Vector2(1,0)
@@ -707,7 +708,7 @@ func test_line_segment_is_closer_works():
 
 
 
-func test_line_segment_is_closer(a, b, c, d):
+static func test_line_segment_is_closer(a, b, c, d):
 	var ab = LineSegment.new(a,b)
 	var ba = LineSegment.new(b,a)
 	var cd = LineSegment.new(c,d)
@@ -724,7 +725,7 @@ func test_line_segment_is_closer(a, b, c, d):
 	assert( not Comparisons.line_segment_is_closer(cd, ba, origin))
 	assert( not Comparisons.line_segment_is_closer(dc, ba, origin))
 
-func test_line_segments_are_equal(a,b,c,d):
+static func test_line_segments_are_equal(a,b,c,d):
 	var ab = LineSegment.new(a,b)
 	var ba = LineSegment.new(a,b)
 	var cd = LineSegment.new(c,d)
@@ -740,11 +741,11 @@ func test_line_segments_are_equal(a,b,c,d):
 	assert( not Comparisons.line_segment_is_closer(cd, ba, origin))
 	assert( not Comparisons.line_segment_is_closer(dc, ba, origin))
 
-func test_compare_line_segments_with_no_common_endpoints():
+static func test_compare_line_segments_with_no_common_endpoints():
 	test_line_segment_is_closer(Vector2(1,1), Vector2(1,-1), Vector2(2,1), Vector2(2,-1))
 	test_line_segment_is_closer(Vector2(1,1), Vector2(1,-1), Vector2(2,2), Vector2(2,3))
 
-func test_compare_line_segments_with_common_endpoints():
+static func test_compare_line_segments_with_common_endpoints():
 	test_line_segments_are_equal(Vector2(1,1), Vector2(1,0), Vector2(1,0), Vector2(1,-1))
 	test_line_segments_are_equal(Vector2(1,1), Vector2(1,0), Vector2(1,0), Vector2(1,1))
 
@@ -752,7 +753,7 @@ func test_compare_line_segments_with_common_endpoints():
 	test_line_segment_is_closer(Vector2(2,1), Vector2(2,0), Vector2(2,0), Vector2(3,2))
 
 
-func test_compare_angle_with_two_points_in_general_position():
+static func test_compare_angle_with_two_points_in_general_position():
 	var origin = Vector2(0,0)
 	assert( Comparisons.is_counter_clockwise(Vector2(0,1), Vector2(1,1), origin))
 	assert( not Comparisons.is_counter_clockwise(Vector2(1,1), Vector2(0,1), origin))
@@ -766,7 +767,7 @@ func test_compare_angle_with_two_points_in_general_position():
 	assert( Comparisons.is_counter_clockwise(Vector2(0,1), Vector2(0,-1), origin))
 	assert( not Comparisons.is_counter_clockwise(Vector2(0,-1), Vector2(0,1), origin))
 
-func test_compare_angle_with_two_points_if_colinear_with_origin():
+static func test_compare_angle_with_two_points_if_colinear_with_origin():
 	var origin = Vector2(0,0)
 	assert( Comparisons.is_counter_clockwise(Vector2(1,0), Vector2(2,0), origin))
 	assert( not Comparisons.is_counter_clockwise(Vector2(2,0), Vector2(1,0), origin))
@@ -776,7 +777,7 @@ func test_compare_angle_with_two_points_if_colinear_with_origin():
 
 
 
-func test_is_counter_clockwise():
+static func test_is_counter_clockwise():
 	var origin = Vector2(0,0)
 	var north = Vector2(0, 1)
 	var west = Vector2(-1, 0)
@@ -792,7 +793,7 @@ func test_is_counter_clockwise():
 
 
 
-func test_sort_events_by_angle():
+static func test_sort_events_by_angle():
 	var a = VisibilityEvent.new(EVENT_TYPE.start_vertex, LineSegment.new(Vector2(1,0), Vector2(0,0)))
 	var b = VisibilityEvent.new(EVENT_TYPE.end_vertex, LineSegment.new(Vector2(1,0),Vector2(0,0)))
 	assert( sort_events_by_angle(Vector2(0,0), [a,b]) == [b,a])
@@ -892,7 +893,7 @@ func test_sort_events_by_angle():
 
 
 
-func test_angle_sort_on_collection(origin, collection, expected):
+static func test_angle_sort_on_collection(origin, collection, expected):
 	var sorted = sort_events_by_angle(origin, collection)
 	var act_segs = []
 	var exp_segs = []
@@ -911,16 +912,16 @@ func test_angle_sort_on_collection(origin, collection, expected):
 		assert( exp_segs[i] == act_segs[i])
 
 
-func test_storing_segments_as_events():
+static func test_storing_segments_as_events():
 	pass
 
 
-func test_calculate_visibility_polygon_with_no_line_segments():
+static func test_calculate_visibility_polygon_with_no_line_segments():
 	var segments = []
 	var polygon = get_fov_from_segments(Vector2(0,0), segments)
 	assert( len(polygon) == 0)
 
-func test_store_segments_as_events():
+static func test_store_segments_as_events():
 	var dim = 250
 	var top_left = Vector2(-dim, -dim)
 	var top_right = Vector2(dim, -dim)
@@ -1024,7 +1025,7 @@ func test_store_segments_as_events():
 
 
 
-func test_calculate_visibility_polygon_with_no_obstacle_only_boundary():
+static func test_calculate_visibility_polygon_with_no_obstacle_only_boundary():
 
 	#	*-------------------------------*
 	#	|								|
@@ -1067,7 +1068,7 @@ func test_calculate_visibility_polygon_with_no_obstacle_only_boundary():
 
 
 
-func test_calculate_visibility_polygon_with_a_polyline_obstacle():
+static func test_calculate_visibility_polygon_with_a_polyline_obstacle():
 
 	#	*-------------------------------*
 	#	|								|
@@ -1128,7 +1129,7 @@ func test_calculate_visibility_polygon_with_a_polyline_obstacle():
 	assert( Comparisons.new(origin).approx_equal_vector(clean_poly[4], bottom_right))
 	assert( Comparisons.new(origin).approx_equal_vector(clean_poly[5], line_right))
 
-func test_calculate_visibility_polygon_with_a_convex_polygon_obstacle():
+static func test_calculate_visibility_polygon_with_a_convex_polygon_obstacle():
 
 	#	*-------------------------------*
 	#	|								|
@@ -1187,7 +1188,7 @@ func test_calculate_visibility_polygon_with_a_convex_polygon_obstacle():
 	test_near_block_at_angle()
 
 
-func test_near_block_at_angle():
+static func test_near_block_at_angle():
 	#	*-------------------------------*
 	#	|								|
 	#	|								|
@@ -1241,7 +1242,7 @@ func test_near_block_at_angle():
 	assert( Comparisons.new(origin).approx_equal_vector(clean_poly[6], box_top_right))
 
 #
-func test_calculate_visibility_polygon_with_a_concave_polygon_obstacle():
+static func test_calculate_visibility_polygon_with_a_concave_polygon_obstacle():
 	#	*-------------------------------*
 	#	|								|
 	#	|								|
