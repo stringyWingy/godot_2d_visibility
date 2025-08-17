@@ -305,7 +305,7 @@ class Comparisons:
 		var cdb = compute_orientation(c,d,b)
 		var segments_are_colinear_and_parallel_to_origin = cdb == ORIENTATION.colinear and cda == ORIENTATION.colinear
 		if segments_are_colinear_and_parallel_to_origin:
-			var a_is_closer_to_origin = origin.distance_to_squared(a) < origin.distance_to_squared(c)
+			var a_is_closer_to_origin = origin.distance_squared_to(a) < origin.distance_squared_to(c)
 			return 	a_is_closer_to_origin	
 
 		var cd_and_ab_will_never_intersect = cda == cdb
